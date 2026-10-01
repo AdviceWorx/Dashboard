@@ -1,0 +1,5641 @@
+﻿@model Dashboard.Models.ActivityDashboardViewModel
+
+@{
+    ViewData["Title"] = "Enterprise Activity Dashboard";
+}
+
+<style>
+    :root {
+        --red: #D64545;
+        --blue: #2563EB;
+        --yellow: #EAB308;
+        --dark: #1F2937;
+        --dark-2: #374151;
+        --grey: #6B7280;
+        --light-grey: #F3F4F6;
+        --border: #E5E7EB;
+        --white: #FFFFFF;
+        --red-light: #FEE2E2;
+        --blue-light: #DBEAFE;
+        --yellow-light: #FEF3C7;
+        --green: #16A34A;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        background: #F7F8FA;
+        color: var(--dark);
+    }
+
+    .dashboard {
+        max-width: 1800px;
+        margin: 0 auto;
+        padding: 24px;
+    }
+
+    /* =========================================================
+           HEADER
+           ========================================================= */
+
+    .dashboard-header {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 24px 28px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 18px rgba(0,0,0,.04);
+    }
+
+    .header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+    }
+
+    .header-title h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: -.5px;
+    }
+
+    .header-title p {
+        margin: 7px 0 0;
+        color: var(--grey);
+        font-size: 14px;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        border: 0;
+        border-radius: 9px;
+        padding: 10px 15px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: .2s ease;
+    }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+    .btn-primary {
+        background: var(--blue);
+        color: white;
+    }
+
+    .btn-dark {
+        background: var(--dark);
+        color: white;
+    }
+
+    .btn-light {
+        background: var(--light-grey);
+        color: var(--dark);
+        border: 1px solid var(--border);
+    }
+
+    /* =========================================================
+           FILTERS
+           ========================================================= */
+
+    .filters {
+        display: grid;
+        grid-template-columns: 150px 180px repeat(4, minmax(150px, 1fr)) auto;
+        gap: 12px;
+        align-items: end;
+        margin-top: 22px;
+    }
+
+    .filter-group label {
+        display: block;
+        font-size: 11px;
+        font-weight: 800;
+        color: var(--grey);
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        margin-bottom: 6px;
+    }
+
+    .filter-group select,
+    .filter-group input {
+        width: 100%;
+        height: 40px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: white;
+        padding: 0 11px;
+        color: var(--dark);
+        outline: none;
+    }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px rgba(37,99,235,.10);
+        }
+
+    /* =========================================================
+           PERIOD BAR
+           ========================================================= */
+
+    .period-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        gap: 15px;
+    }
+
+    .period-buttons {
+        display: flex;
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 4px;
+    }
+
+    .period-btn {
+        border: 0;
+        background: transparent;
+        padding: 9px 18px;
+        border-radius: 7px;
+        font-weight: 700;
+        color: var(--grey);
+        cursor: pointer;
+    }
+
+        .period-btn.active {
+            background: var(--dark);
+            color: white;
+        }
+
+    .period-description {
+        font-size: 13px;
+        color: var(--grey);
+    }
+
+    /* =========================================================
+           LOADING / ERROR
+           ========================================================= */
+
+    .status-box {
+        display: none;
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+        .status-box.show {
+            display: block;
+        }
+
+    .status-error {
+        color: var(--red);
+        background: var(--red-light);
+        border-color: #FCA5A5;
+    }
+
+    /* =========================================================
+           KPI
+           ========================================================= */
+
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 14px;
+        margin-bottom: 22px;
+    }
+
+    .kpi {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 18px;
+        min-height: 120px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.025);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .kpi::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            height: 4px;
+            width: 100%;
+        }
+
+        .kpi.blue::after {
+            background: var(--blue);
+        }
+
+        .kpi.red::after {
+            background: var(--red);
+        }
+
+        .kpi.yellow::after {
+            background: var(--yellow);
+        }
+
+    .kpi-title {
+        font-size: 11px;
+        text-transform: uppercase;
+        color: var(--grey);
+        font-weight: 800;
+        letter-spacing: .4px;
+    }
+
+    .kpi-value {
+        margin-top: 10px;
+        font-size: 27px;
+        font-weight: 800;
+        color: var(--dark);
+    }
+
+    .kpi-sub {
+        margin-top: 5px;
+        font-size: 11px;
+        color: var(--grey);
+    }
+
+    /* =========================================================
+           SECTION
+           ========================================================= */
+
+    .section {
+        margin-bottom: 22px;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 800;
+        margin: 0;
+    }
+
+    .section-note {
+        color: var(--grey);
+        font-size: 12px;
+    }
+
+    /* =========================================================
+           CHART GRID
+           ========================================================= */
+
+    .chart-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .chart-card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 15px;
+        padding: 18px;
+        min-height: 360px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.025);
+    }
+
+        .chart-card.full {
+            grid-column: 1 / -1;
+        }
+
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 10px;
+    }
+
+    .chart-title {
+        font-size: 14px;
+        font-weight: 800;
+        margin: 0;
+    }
+
+    .chart-hint {
+        font-size: 10px;
+        color: var(--grey);
+        margin-top: 3px;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 290px;
+    }
+
+        .chart-container.small {
+            height: 250px;
+        }
+
+    /* =========================================================
+           TABLE
+           ========================================================= */
+
+    .table-card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    .table-toolbar {
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+    }
+
+        .table-toolbar h3 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+
+    th {
+        background: #F9FAFB;
+        color: var(--grey);
+        text-transform: uppercase;
+        font-size: 10px;
+        letter-spacing: .4px;
+        font-weight: 800;
+        padding: 12px 14px;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+    }
+
+    td {
+        padding: 12px 14px;
+        border-bottom: 1px solid #F0F1F3;
+        white-space: nowrap;
+    }
+
+    tr:hover td {
+        background: #FAFBFC;
+    }
+
+    .user-link {
+        color: var(--blue);
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    .badge {
+        display: inline-flex;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+    .badge-blue {
+        background: var(--blue-light);
+        color: #1D4ED8;
+    }
+
+    .badge-red {
+        background: var(--red-light);
+        color: #B91C1C;
+    }
+
+    .badge-yellow {
+        background: var(--yellow-light);
+        color: #A16207;
+    }
+
+    /* =========================================================
+           MODALS
+           ========================================================= */
+
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(17,24,39,.68);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 25px;
+    }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+    .modal {
+        width: min(1100px, 96vw);
+        max-height: 92vh;
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 25px 70px rgba(0,0,0,.25);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .modal-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+    }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .modal-header p {
+            margin: 5px 0 0;
+            font-size: 12px;
+            color: var(--grey);
+        }
+
+    .modal-close {
+        border: 0;
+        background: var(--light-grey);
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        font-size: 20px;
+        cursor: pointer;
+        color: var(--dark);
+    }
+
+    .modal-body {
+        padding: 22px;
+        overflow-y: auto;
+    }
+
+    /* =========================================================
+           CONTRIBUTION MODAL
+           ========================================================= */
+
+    .contribution-modal {
+        width: min(1200px, 96vw);
+    }
+
+    .contribution-summary {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .summary-card {
+        background: #F9FAFB;
+        border: 1px solid var(--border);
+        border-radius: 11px;
+        padding: 14px;
+    }
+
+        .summary-card .label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: var(--grey);
+            font-weight: 800;
+        }
+
+        .summary-card .value {
+            margin-top: 6px;
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+    .contribution-table tbody tr {
+        cursor: pointer;
+    }
+
+        .contribution-table tbody tr:hover td {
+            background: var(--blue-light);
+        }
+
+    .empty-contribution {
+        text-align: center;
+        padding: 40px;
+        color: var(--grey);
+    }
+
+    /* =========================================================
+           USER DETAIL
+           ========================================================= */
+
+    .user-detail-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+    }
+
+    .detail-card {
+        background: #F9FAFB;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px;
+    }
+
+        .detail-card .label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: var(--grey);
+            font-weight: 800;
+        }
+
+        .detail-card .value {
+            margin-top: 6px;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+    .detail-section {
+        margin-top: 22px;
+    }
+
+        .detail-section h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+    /* =========================================================
+           RESPONSIVE
+           ========================================================= */
+
+    @@media(max-width: 1300px) {
+        .filters {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .kpi-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @@media(max-width: 900px) {
+        .dashboard {
+            padding: 12px;
+        }
+
+        .header-top {
+            flex-direction: column;
+        }
+
+        .chart-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .chart-card.full {
+            grid-column: auto;
+        }
+
+        .filters {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .contribution-summary,
+        .user-detail-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @@media(max-width: 600px) {
+        .filters,
+        .kpi-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .period-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .period-buttons {
+            width: 100%;
+        }
+
+        .period-btn {
+            flex: 1;
+        }
+
+        .contribution-summary,
+        .user-detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="dashboard">
+
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
+
+    <div class="dashboard-header">
+
+        <div class="header-top">
+
+            <div class="header-title">
+                <h1>Enterprise Activity Dashboard</h1>
+                <p>
+                    Workforce activity, productivity, Xplan usage,
+                    location intelligence and risk analytics.
+                </p>
+            </div>
+
+            <div class="header-actions">
+                <button class="btn btn-light" onclick="loadDashboard()">
+                    ↻ Refresh
+                </button>
+
+                <button class="btn btn-dark" onclick="exportDashboardPdf()">
+                    Export PDF
+                </button>
+            </div>
+
+        </div>
+
+        <div class="filters">
+
+            <div class="filter-group">
+                <label>Period</label>
+                <select id="periodSelect">
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Date</label>
+                <input type="date" id="reportDate" />
+            </div>
+
+            <div class="filter-group">
+                <label>User Group</label>
+                <select id="groupFilter">
+                    <option value="">All Groups</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Office Branch</label>
+                <select id="branchFilter">
+                    <option value="">All Branches</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Location</label>
+                <select id="locationFilter">
+                    <option value="">All Locations</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>User</label>
+                <select id="userFilter">
+                    <option value="">All Users</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Search</label>
+                <input type="text"
+                       id="searchUser"
+                       placeholder="Search user..." />
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         STATUS
+         ===================================================== -->
+
+    <div id="loadingBox" class="status-box">
+        Loading activity data...
+    </div>
+
+    <div id="errorBox" class="status-box status-error">
+    </div>
+
+    <!-- =====================================================
+         PERIOD
+         ===================================================== -->
+
+    <div class="period-bar">
+
+        <div class="period-buttons">
+            <button class="period-btn active" data-period="daily">
+                Daily
+            </button>
+
+            <button class="period-btn" data-period="weekly">
+                Weekly
+            </button>
+
+            <button class="period-btn" data-period="monthly">
+                Monthly
+            </button>
+        </div>
+
+        <div id="periodDescription" class="period-description">
+            Daily activity
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         KPI
+         ===================================================== -->
+
+    <div class="kpi-grid">
+
+        <div class="kpi blue">
+            <div class="kpi-title">Users</div>
+            <div class="kpi-value" id="kpiUsers">0</div>
+            <div class="kpi-sub">Unique workforce users</div>
+        </div>
+
+        <div class="kpi blue">
+            <div class="kpi-title">Work Hours</div>
+            <div class="kpi-value" id="kpiWork">0.00</div>
+            <div class="kpi-sub">Total recorded hours</div>
+        </div>
+
+        <div class="kpi blue">
+            <div class="kpi-title">Active Hours</div>
+            <div class="kpi-value" id="kpiActive">0.00</div>
+            <div class="kpi-sub">Active computer time</div>
+        </div>
+
+        <div class="kpi red">
+            <div class="kpi-title">Downtime</div>
+            <div class="kpi-value" id="kpiDowntime">0.00</div>
+            <div class="kpi-sub">Recorded inactive time</div>
+        </div>
+
+        <div class="kpi blue">
+            <div class="kpi-title">Utilisation</div>
+            <div class="kpi-value" id="kpiUtilisation">0%</div>
+            <div class="kpi-sub">Active / Work</div>
+        </div>
+
+        <div class="kpi yellow">
+            <div class="kpi-title">Xplan Hours</div>
+            <div class="kpi-value" id="kpiXplan">0.00</div>
+            <div class="kpi-sub">Xplan activity</div>
+        </div>
+
+        <div class="kpi yellow">
+            <div class="kpi-title">Xplan Sessions</div>
+            <div class="kpi-value" id="kpiXplanSessions">0</div>
+            <div class="kpi-sub">Recorded sessions</div>
+        </div>
+
+        <div class="kpi red">
+            <div class="kpi-title">Risk Flags</div>
+            <div class="kpi-value" id="kpiFlags">0</div>
+            <div class="kpi-sub">Anomaly signals</div>
+        </div>
+
+        <div class="kpi red">
+            <div class="kpi-title">After Hours</div>
+            <div class="kpi-value" id="kpiAfterHours">0</div>
+            <div class="kpi-sub">After-hours sessions</div>
+        </div>
+
+        <div class="kpi red">
+            <div class="kpi-title">Overnight</div>
+            <div class="kpi-value" id="kpiOvernight">0</div>
+            <div class="kpi-sub">Overnight sessions</div>
+        </div>
+
+        <div class="kpi yellow">
+            <div class="kpi-title">IP Changes</div>
+            <div class="kpi-value" id="kpiIpChanges">0</div>
+            <div class="kpi-sub">Network changes</div>
+        </div>
+
+        <div class="kpi red">
+            <div class="kpi-title">Flagged Users</div>
+            <div class="kpi-value" id="kpiFlaggedUsers">0</div>
+            <div class="kpi-sub">Users with flags</div>
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         MANAGEMENT SUMMARY
+         ===================================================== -->
+
+    <div class="section">
+
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Management Analytics</h2>
+                <div class="section-note">
+                    Click any chart column, bar or segment to see the users contributing to that result.
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-grid">
+
+            <!-- 1 -->
+            <div class="chart-card full">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">
+                            Work vs Active vs Downtime
+                        </h3>
+                        <div class="chart-hint">
+                            Click a column to view contributing users
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="workActivityChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 2 -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">
+                            Productivity Utilisation
+                        </h3>
+                        <div class="chart-hint">
+                            Click to inspect users
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="utilisationChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 3 -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">
+                            Xplan Usage
+                        </h3>
+                        <div class="chart-hint">
+                            Click to inspect contributing users
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="xplanChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 4 -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">
+                            Xplan Engagement
+                        </h3>
+                        <div class="chart-hint">
+                            Click any bar
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="xplanEngagementChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 5 -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">
+                            Risk & Anomaly Signals
+                        </h3>
+                        <div class="chart-hint">
+                            Click a result to see contributing users
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="anomalyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 6 -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">
+                            Location Verdict
+                        </h3>
+                        <div class="chart-hint">
+                            Click a segment
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container small">
+                    <canvas id="locationChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 7 -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">
+                            Branch Performance
+                        </h3>
+                        <div class="chart-hint">
+                            Click a branch
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="branchChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 8 -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">
+                            User Group Performance
+                        </h3>
+                        <div class="chart-hint">
+                            Click a group
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="groupChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 9 -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">
+                            Job Title Distribution
+                        </h3>
+                        <div class="chart-hint">
+                            Click a job title
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="jobTitleChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 10 -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">
+                            Work Hours Distribution
+                        </h3>
+                        <div class="chart-hint">
+                            Click a user
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="workDistributionChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 11 -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">
+                            After-Hours Activity
+                        </h3>
+                        <div class="chart-hint">
+                            Click a user
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="afterHoursChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 12 -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">
+                            Overnight Activity
+                        </h3>
+                        <div class="chart-hint">
+                            Click a user
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="overnightChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 13 -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">
+                            IP Change Activity
+                        </h3>
+                        <div class="chart-hint">
+                            Click a user
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="ipChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 14 -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">
+                            Active vs Downtime
+                        </h3>
+                        <div class="chart-hint">
+                            Click a column
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="timeDistributionChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 15 -->
+            <div class="chart-card full">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">
+                            Workforce Activity Matrix
+                        </h3>
+                        <div class="chart-hint">
+                            Click a user
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="activityMatrixChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- =====================================================
+         WORKFORCE TABLE
+         ===================================================== -->
+
+    <div class="section">
+
+        <div class="section-header">
+            <h2 class="section-title">
+                Workforce Detail
+            </h2>
+
+            <div class="section-note">
+                Click a user to view full profile
+            </div>
+        </div>
+
+        <div class="table-card">
+
+            <div class="table-toolbar">
+                <h3 id="tableTitle">
+                    Workforce
+                </h3>
+
+                <span id="recordCount"
+                      class="badge badge-blue">
+                    0 users
+                </span>
+            </div>
+
+            <div class="table-wrapper">
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Group</th>
+                            <th>Job Title</th>
+                            <th>Branch</th>
+                            <th>Work</th>
+                            <th>Active</th>
+                            <th>Downtime</th>
+                            <th>Utilisation</th>
+                            <th>Xplan</th>
+                            <th>Sessions</th>
+                            <th>Location</th>
+                            <th>IP Changes</th>
+                            <th>Flags</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="workforceTableBody"></tbody>
+                </table>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     CONTRIBUTION MODAL
+     ========================================================= -->
+
+<div class="modal-overlay" id="contributionModal">
+
+    <div class="modal contribution-modal">
+
+        <div class="modal-header">
+
+            <div>
+                <h2 id="contributionTitle">
+                    Contribution Details
+                </h2>
+
+                <p id="contributionSubtitle">
+                    Users contributing to this result
+                </p>
+            </div>
+
+            <button class="modal-close"
+                    type="button"
+                    onclick="closeContributionModal()">
+                ×
+            </button>
+
+        </div>
+
+        <div class="modal-body">
+
+            <div class="contribution-summary">
+
+                <div class="summary-card">
+                    <div class="label">
+                        Total
+                    </div>
+
+                    <div class="value"
+                         id="contributionTotal">
+                        0
+                    </div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="label">
+                        Users
+                    </div>
+
+                    <div class="value"
+                         id="contributionUsers">
+                        0
+                    </div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="label">
+                        Average
+                    </div>
+
+                    <div class="value"
+                         id="contributionAverage">
+                        0
+                    </div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="label">
+                        Metric
+                    </div>
+
+                    <div class="value"
+                         id="contributionMetric">
+                        —
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="table-wrapper">
+
+                <table class="contribution-table">
+
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Contribution</th>
+                            <th>% Contribution</th>
+                            <th>Group</th>
+                            <th>Branch</th>
+                            <th>Job Title</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="contributionTableBody"></tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     USER DETAIL MODAL
+     ========================================================= -->
+
+<div class="modal-overlay" id="userModal">
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <div>
+                <h2 id="userModalName">
+                    User Details
+                </h2>
+
+                <p id="userModalSubtitle">
+                    Workforce profile
+                </p>
+            </div>
+
+            <button class="modal-close"
+                    type="button"
+                    onclick="closeUserModal()">
+                ×
+            </button>
+
+        </div>
+
+        <div class="modal-body">
+
+            <div class="user-detail-grid">
+
+                <div class="detail-card">
+                    <div class="label">User Group</div>
+                    <div class="value" id="detailGroup">—</div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="label">Job Title</div>
+                    <div class="value" id="detailJobTitle">—</div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="label">Branch</div>
+                    <div class="value" id="detailBranch">—</div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="label">City</div>
+                    <div class="value" id="detailCity">—</div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="label">Work Hours</div>
+                    <div class="value" id="detailWork">0</div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="label">Active Hours</div>
+                    <div class="value" id="detailActive">0</div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="label">Downtime</div>
+                    <div class="value" id="detailDowntime">0</div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="label">Utilisation</div>
+                    <div class="value" id="detailUtilisation">0%</div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="label">Xplan Hours</div>
+                    <div class="value" id="detailXplan">0</div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="label">Xplan Sessions</div>
+                    <div class="value" id="detailXplanSessions">0</div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="label">After Hours</div>
+                    <div class="value" id="detailAfterHours">0</div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="label">Overnight</div>
+                    <div class="value" id="detailOvernight">0</div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="label">IP Changes</div>
+                    <div class="value" id="detailIpChanges">0</div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="label">Flags</div>
+                    <div class="value" id="detailFlags">0</div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="label">Location Verdict</div>
+                    <div class="value" id="detailLocation">—</div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="label">Connection</div>
+                    <div class="value" id="detailConnection">—</div>
+                </div>
+
+            </div>
+
+            <div class="detail-section">
+
+                <h3>Network Information</h3>
+
+                <div class="table-wrapper">
+
+                    <table>
+                        <tbody>
+                            <tr>
+                                <th>Device</th>
+                                <td id="detailDevice">—</td>
+                            </tr>
+
+                            <tr>
+                                <th>ISP</th>
+                                <td id="detailIsp">—</td>
+                            </tr>
+
+                            <tr>
+                                <th>First Public IP</th>
+                                <td id="detailFirstIp">—</td>
+                            </tr>
+
+                            <tr>
+                                <th>Last Public IP</th>
+                                <td id="detailLastIp">—</td>
+                            </tr>
+
+                            <tr>
+                                <th>Clock In</th>
+                                <td id="detailClockIn">—</td>
+                            </tr>
+
+                            <tr>
+                                <th>Clock Out</th>
+                                <td id="detailClockOut">—</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+
+            </div>
+
+            <div class="detail-section">
+
+                <h3>Risk / Research Information</h3>
+
+                <div class="table-wrapper">
+
+                    <table>
+                        <tbody>
+                            <tr>
+                                <th>Anomaly Flags</th>
+                                <td id="detailAnomaly">—</td>
+                            </tr>
+
+                            <tr>
+                                <th>Research Note</th>
+                                <td id="detailResearch">—</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<script>
+
+    /* =========================================================
+       GLOBAL STATE
+       ========================================================= */
+
+    let reportPeriod = "daily";
+    let reportDate = "";
+
+    let allRecords = [];
+    let filteredRecords = [];
+
+    let allUsers = [];
+    let filteredUsers = [];
+
+    const charts = {};
+
+    const COLORS = {
+        red: "#D64545",
+        blue: "#2563EB",
+        yellow: "#EAB308",
+        dark: "#1F2937",
+        grey: "#6B7280",
+        green: "#16A34A"
+    };
+
+
+    /* =========================================================
+       INIT
+       ========================================================= */
+
+    document.addEventListener("DOMContentLoaded", function() {
+
+        const today = new Date();
+
+        document.getElementById("reportDate").value =
+            formatDateInput(today);
+
+        document.getElementById("periodSelect").value =
+            "daily";
+
+        bindEvents();
+
+        loadDashboard();
+    });
+
+
+    /* =========================================================
+       EVENTS
+       ========================================================= */
+
+    function bindEvents() {
+
+        document
+            .getElementById("periodSelect")
+            .addEventListener("change", function() {
+
+                reportPeriod = this.value;
+
+                updatePeriodButtons();
+
+                loadDashboard();
+            });
+
+
+        document
+            .getElementById("reportDate")
+            .addEventListener("change", function() {
+
+                loadDashboard();
+            });
+
+
+        document
+            .getElementById("groupFilter")
+            .addEventListener("change", applyFilters);
+
+
+        document
+            .getElementById("branchFilter")
+            .addEventListener("change", applyFilters);
+
+
+        document
+            .getElementById("locationFilter")
+            .addEventListener("change", applyFilters);
+
+
+        document
+            .getElementById("userFilter")
+            .addEventListener("change", applyFilters);
+
+
+        document
+            .getElementById("searchUser")
+            .addEventListener("input", applyFilters);
+
+
+        document
+            .querySelectorAll(".period-btn")
+            .forEach(btn => {
+
+                btn.addEventListener("click", function() {
+
+                    reportPeriod =
+                        this.dataset.period;
+
+                    document
+                        .getElementById("periodSelect")
+                        .value = reportPeriod;
+
+                    updatePeriodButtons();
+
+                    loadDashboard();
+                });
+
+            });
+
+
+        document
+            .getElementById("contributionModal")
+            .addEventListener("click", function(e) {
+
+                if (e.target === this) {
+                    closeContributionModal();
+                }
+
+            });
+
+
+        document
+            .getElementById("userModal")
+            .addEventListener("click", function(e) {
+
+                if (e.target === this) {
+                    closeUserModal();
+                }
+
+            });
+
+
+        document.addEventListener("keydown", function(e) {
+
+            if (e.key === "Escape") {
+
+                closeContributionModal();
+                closeUserModal();
+
+            }
+
+        });
+
+    }
+
+
+    /* =========================================================
+       LOAD
+       ========================================================= */
+
+    async function loadDashboard() {
+
+        showLoading(true);
+        hideError();
+
+        reportPeriod =
+            document.getElementById("periodSelect").value;
+
+        reportDate =
+            document.getElementById("reportDate").value;
+
+        try {
+
+            const url =
+                `/api/activity?period=${encodeURIComponent(reportPeriod)}&date=${encodeURIComponent(reportDate)}`;
+
+            const response =
+                await fetch(url, {
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                });
+
+            if (!response.ok) {
+                throw new Error(
+                    `API returned HTTP ${response.status}`
+                );
+            }
+
+            const payload =
+                await response.json();
+
+            /*
+             * Supports:
+             *
+             * [...]
+             *
+             * OR
+             *
+             * {
+             *   data: [...]
+             * }
+             */
+
+            if (Array.isArray(payload)) {
+
+                allRecords = payload;
+
+            } else if (Array.isArray(payload.data)) {
+
+                allRecords = payload.data;
+
+            } else if (Array.isArray(payload.users)) {
+
+                allRecords = payload.users;
+
+            } else {
+
+                allRecords = [];
+
+            }
+
+            normalizeRecords();
+
+            allUsers =
+                aggregateUsers(allRecords);
+
+            populateFilters();
+
+            applyFilters();
+
+            updatePeriodDescription(payload);
+
+        } catch (error) {
+
+            console.error(error);
+
+            showError(
+                "Unable to load activity data. " +
+                error.message
+            );
+
+            allRecords = [];
+            filteredRecords = [];
+            allUsers = [];
+            filteredUsers = [];
+
+            clearDashboard();
+
+        } finally {
+
+            showLoading(false);
+
+        }
+
+    }
+
+
+    /* =========================================================
+       NORMALIZE
+       ========================================================= */
+
+    function normalizeRecords() {
+
+        allRecords =
+            allRecords.map(x => ({
+
+                ...x,
+
+                user_name:
+                    x.user_name ??
+                    x.UserName ??
+                    "",
+
+                user_group:
+                    x.user_group ??
+                    x.UserGroup ??
+                    "",
+
+                job_title:
+                    x.job_title ??
+                    x.JobTitle ??
+                    "",
+
+                device_name:
+                    x.device_name ??
+                    x.DeviceName ??
+                    "",
+
+                work_hours:
+                    num(x.work_hours ??
+                        x.WorkHours),
+
+                active_hours:
+                    num(x.active_hours ??
+                        x.ActiveHours),
+
+                downtime_hours:
+                    num(x.downtime_hours ??
+                        x.DowntimeHours),
+
+                m365_hours:
+                    num(x.m365_hours ??
+                        x.M365Hours),
+
+                interactive_events:
+                    num(x.interactive_events ??
+                        x.InteractiveEvents),
+
+                location_verdict:
+                    x.location_verdict ??
+                    x.LocationVerdict ??
+                    "",
+
+                office_branch:
+                    x.office_branch ??
+                    x.OfficeBranch ??
+                    "",
+
+                city:
+                    x.city ??
+                    x.City ??
+                    "",
+
+                region:
+                    x.region ??
+                    x.Region ??
+                    "",
+
+                isp:
+                    x.isp ??
+                    x.ISP ??
+                    "",
+
+                connection_type:
+                    x.connection_type ??
+                    x.ConnectionType ??
+                    "",
+
+                first_public_ip:
+                    x.first_public_ip ??
+                    x.FirstPublicIP ??
+                    "",
+
+                last_public_ip:
+                    x.last_public_ip ??
+                    x.LastPublicIP ??
+                    "",
+
+                ip_changes:
+                    num(x.ip_changes ??
+                        x.IPChanges),
+
+                xplan_sessions:
+                    num(x.xplan_sessions ??
+                        x.XplanSessions),
+
+                xplan_hours:
+                    num(x.xplan_hours ??
+                        x.XplanHours),
+
+                xplan_resources:
+                    num(x.xplan_resources ??
+                        x.XplanResources),
+
+                xplan_overnight_sessions:
+                    num(x.xplan_overnight_sessions ??
+                        x.XplanOvernightSessions),
+
+                xplan_after_hours_sessions:
+                    num(x.xplan_after_hours_sessions ??
+                        x.XplanAfterHoursSessions),
+
+                anomaly_flags:
+                    x.anomaly_flags ??
+                    x.AnomalyFlags ??
+                    "",
+
+                flag_count:
+                    num(x.flag_count ??
+                        x.FlagCount),
+
+                prev_day_work_hours:
+                    num(x.prev_day_work_hours ??
+                        x.PreviousDayWorkHours),
+
+                work_hours_change:
+                    num(x.work_hours_change ??
+                        x.WorkHoursChange),
+
+                new_user:
+                    Boolean(
+                        x.new_user ??
+                        x.NewUser
+                    ),
+
+                research_note:
+                    x.research_note ??
+                    x.ResearchNote ??
+                    "",
+
+                report_date:
+                    x.report_date ??
+                    x.ReportDate ??
+                    x.date ??
+                    x.Date ??
+                    reportDate
+
+            }));
+
+    }
+
+
+    /* =========================================================
+       AGGREGATE USERS
+       ========================================================= */
+
+    function aggregateUsers(records) {
+
+        const map = new Map();
+
+        records.forEach(r => {
+
+            const key =
+                String(r.user_name || "Unknown");
+
+            if (!map.has(key)) {
+
+                map.set(key, {
+
+                    user_name: key,
+
+                    user_group: r.user_group || "",
+
+                    job_title: r.job_title || "",
+
+                    device_name: r.device_name || "",
+
+                    work_hours: 0,
+
+                    active_hours: 0,
+
+                    downtime_hours: 0,
+
+                    m365_hours: 0,
+
+                    interactive_events: 0,
+
+                    location_verdict:
+                        r.location_verdict || "",
+
+                    office_branch:
+                        r.office_branch || "",
+
+                    city:
+                        r.city || "",
+
+                    region:
+                        r.region || "",
+
+                    isp:
+                        r.isp || "",
+
+                    connection_type:
+                        r.connection_type || "",
+
+                    first_public_ip:
+                        r.first_public_ip || "",
+
+                    last_public_ip:
+                        r.last_public_ip || "",
+
+                    ip_changes: 0,
+
+                    xplan_sessions: 0,
+
+                    xplan_hours: 0,
+
+                    xplan_resources: 0,
+
+                    xplan_overnight_sessions: 0,
+
+                    xplan_after_hours_sessions: 0,
+
+                    flag_count: 0,
+
+                    anomaly_flags: [],
+
+                    previous_day_work_hours: 0,
+
+                    work_hours_change: 0,
+
+                    new_user: false,
+
+                    research_note: ""
+
+                });
+
+            }
+
+            const u = map.get(key);
+
+            u.work_hours += num(r.work_hours);
+            u.active_hours += num(r.active_hours);
+            u.downtime_hours += num(r.downtime_hours);
+            u.m365_hours += num(r.m365_hours);
+            u.interactive_events += num(r.interactive_events);
+
+            u.ip_changes += num(r.ip_changes);
+
+            u.xplan_sessions += num(r.xplan_sessions);
+            u.xplan_hours += num(r.xplan_hours);
+            u.xplan_resources += num(r.xplan_resources);
+
+            u.xplan_overnight_sessions +=
+                num(r.xplan_overnight_sessions);
+
+            u.xplan_after_hours_sessions +=
+                num(r.xplan_after_hours_sessions);
+
+            u.flag_count += num(r.flag_count);
+
+            if (r.anomaly_flags) {
+
+                if (Array.isArray(r.anomaly_flags)) {
+
+                    u.anomaly_flags.push(
+                        ...r.anomaly_flags
+                    );
+
+                } else {
+
+                    u.anomaly_flags.push(
+                        String(r.anomaly_flags)
+                    );
+
+                }
+
+            }
+
+            u.previous_day_work_hours =
+                num(r.prev_day_work_hours);
+
+            u.work_hours_change +=
+                num(r.work_hours_change);
+
+            u.new_user =
+                u.new_user || Boolean(r.new_user);
+
+            if (r.research_note) {
+                u.research_note =
+                    r.research_note;
+            }
+
+        });
+
+        return Array.from(map.values())
+            .map(u => {
+
+                u.utilisation =
+                    u.work_hours > 0
+                        ? (u.active_hours /
+                            u.work_hours) * 100
+                        : 0;
+
+                return u;
+
+            })
+            .sort((a, b) =>
+                a.user_name.localeCompare(
+                    b.user_name
+                )
+            );
+
+    }
+
+
+    /* =========================================================
+       FILTERS
+       ========================================================= */
+
+    function populateFilters() {
+
+        fillSelect(
+            "groupFilter",
+            uniqueValues(
+                allUsers.map(x => x.user_group)
+            )
+        );
+
+        fillSelect(
+            "branchFilter",
+            uniqueValues(
+                allUsers.map(x => x.office_branch)
+            )
+        );
+
+        fillSelect(
+            "locationFilter",
+            uniqueValues(
+                allUsers.map(x => x.location_verdict)
+            )
+        );
+
+        fillSelect(
+            "userFilter",
+            uniqueValues(
+                allUsers.map(x => x.user_name)
+            )
+        );
+
+    }
+
+
+    function fillSelect(id, values) {
+
+        const select =
+            document.getElementById(id);
+
+        const previous =
+            select.value;
+
+        const firstOption =
+            select.options[0].text;
+
+        select.innerHTML = "";
+
+        const empty =
+            document.createElement("option");
+
+        empty.value = "";
+        empty.textContent = firstOption;
+
+        select.appendChild(empty);
+
+        values.forEach(value => {
+
+            if (!value) return;
+
+            const option =
+                document.createElement("option");
+
+            option.value = value;
+            option.textContent = value;
+
+            select.appendChild(option);
+
+        });
+
+        if (
+            values.includes(previous)
+        ) {
+            select.value = previous;
+        }
+
+    }
+
+
+    function applyFilters() {
+
+        const group =
+            document.getElementById(
+                "groupFilter"
+            ).value;
+
+        const branch =
+            document.getElementById(
+                "branchFilter"
+            ).value;
+
+        const location =
+            document.getElementById(
+                "locationFilter"
+            ).value;
+
+        const user =
+            document.getElementById(
+                "userFilter"
+            ).value;
+
+        const search =
+            document.getElementById(
+                "searchUser"
+            ).value
+                .trim()
+                .toLowerCase();
+
+
+        filteredRecords =
+            allRecords.filter(r => {
+
+                if (
+                    group &&
+                    r.user_group !== group
+                ) return false;
+
+                if (
+                    branch &&
+                    r.office_branch !== branch
+                ) return false;
+
+                if (
+                    location &&
+                    r.location_verdict !== location
+                ) return false;
+
+                if (
+                    user &&
+                    r.user_name !== user
+                ) return false;
+
+                if (
+                    search &&
+                    !String(r.user_name)
+                        .toLowerCase()
+                        .includes(search)
+                ) return false;
+
+                return true;
+
+            });
+
+
+        filteredUsers =
+            aggregateUsers(filteredRecords);
+
+
+        updateKpis();
+
+        renderCharts();
+
+        renderWorkforceTable();
+
+    }
+
+
+    /* =========================================================
+       KPI
+       ========================================================= */
+
+    function updateKpis() {
+
+        const users =
+            filteredUsers;
+
+        const work =
+            sum(users, "work_hours");
+
+        const active =
+            sum(users, "active_hours");
+
+        const downtime =
+            sum(users, "downtime_hours");
+
+        const xplan =
+            sum(users, "xplan_hours");
+
+        const sessions =
+            sum(users, "xplan_sessions");
+
+        const flags =
+            sum(users, "flag_count");
+
+        const afterHours =
+            sum(
+                users,
+                "xplan_after_hours_sessions"
+            );
+
+        const overnight =
+            sum(
+                users,
+                "xplan_overnight_sessions"
+            );
+
+        const ipChanges =
+            sum(users, "ip_changes");
+
+        const utilisation =
+            work > 0
+                ? active / work * 100
+                : 0;
+
+        const flaggedUsers =
+            users.filter(
+                x => num(x.flag_count) > 0
+            ).length;
+
+
+        setText(
+            "kpiUsers",
+            users.length
+        );
+
+        setText(
+            "kpiWork",
+            formatNumber(work)
+        );
+
+        setText(
+            "kpiActive",
+            formatNumber(active)
+        );
+
+        setText(
+            "kpiDowntime",
+            formatNumber(downtime)
+        );
+
+        setText(
+            "kpiUtilisation",
+            formatNumber(utilisation) + "%"
+        );
+
+        setText(
+            "kpiXplan",
+            formatNumber(xplan)
+        );
+
+        setText(
+            "kpiXplanSessions",
+            formatNumber(sessions, 0)
+        );
+
+        setText(
+            "kpiFlags",
+            formatNumber(flags, 0)
+        );
+
+        setText(
+            "kpiAfterHours",
+            formatNumber(afterHours, 0)
+        );
+
+        setText(
+            "kpiOvernight",
+            formatNumber(overnight, 0)
+        );
+
+        setText(
+            "kpiIpChanges",
+            formatNumber(ipChanges, 0)
+        );
+
+        setText(
+            "kpiFlaggedUsers",
+            flaggedUsers
+        );
+
+    }
+
+
+    /* =========================================================
+       CHARTS
+       ========================================================= */
+
+    function renderCharts() {
+
+        destroyCharts();
+
+        createWorkActivityChart();
+
+        createUtilisationChart();
+
+        createXplanChart();
+
+        createXplanEngagementChart();
+
+        createAnomalyChart();
+
+        createLocationChart();
+
+        createBranchChart();
+
+        createGroupChart();
+
+        createJobTitleChart();
+
+        createWorkDistributionChart();
+
+        createAfterHoursChart();
+
+        createOvernightChart();
+
+        createIpChart();
+
+        createTimeDistributionChart();
+
+        createActivityMatrixChart();
+
+    }
+
+
+    /* =========================================================
+       WORK / ACTIVE / DOWNTIME
+       ========================================================= */
+
+    function createWorkActivityChart() {
+
+        const data =
+            getTrendData();
+
+        charts.workActivityChart =
+            new Chart(
+                document.getElementById(
+                    "workActivityChart"
+                ),
+                {
+                    type: "bar",
+
+                    data: {
+
+                        labels: data.labels,
+
+                        datasets: [
+
+                            {
+                                label: "Work Hours",
+                                data: data.work,
+                                backgroundColor:
+                                    COLORS.blue,
+                                borderRadius: 5
+                            },
+
+                            {
+                                label: "Active Hours",
+                                data: data.active,
+                                backgroundColor:
+                                    COLORS.yellow,
+                                borderRadius: 5
+                            },
+
+                            {
+                                label: "Downtime",
+                                data: data.downtime,
+                                backgroundColor:
+                                    COLORS.red,
+                                borderRadius: 5
+                            }
+
+                        ]
+
+                    },
+
+                    options: chartOptions(
+                        function(
+                            event,
+                            elements
+                        ) {
+
+                            if (!elements.length)
+                                return;
+
+                            const e =
+                                elements[0];
+
+                            const metric =
+                                e.datasetIndex === 0
+                                    ? "work_hours"
+                                    : e.datasetIndex === 1
+                                        ? "active_hours"
+                                        : "downtime_hours";
+
+                            handleTrendClick(
+                                data.keys[e.index],
+                                metric,
+                                metricLabel(metric)
+                            );
+
+                        }
+                    )
+
+                }
+            );
+
+    }
+
+
+    /* =========================================================
+       UTILISATION
+       ========================================================= */
+
+    function createUtilisationChart() {
+
+        const data =
+            getTrendData();
+
+        charts.utilisationChart =
+            new Chart(
+                document.getElementById(
+                    "utilisationChart"
+                ),
+                {
+                    type: "bar",
+
+                    data: {
+
+                        labels: data.labels,
+
+                        datasets: [
+                            {
+                                label: "Utilisation %",
+                                data: data.utilisation,
+                                backgroundColor:
+                                    COLORS.blue,
+                                borderRadius: 5
+                            }
+                        ]
+
+                    },
+
+                    options: chartOptions(
+                        function(
+                            event,
+                            elements
+                        ) {
+
+                            if (!elements.length)
+                                return;
+
+                            handleTrendClick(
+                                data.keys[
+                                elements[0].index
+                                ],
+                                "utilisation",
+                                "Utilisation"
+                            );
+
+                        }
+                    )
+
+                }
+            );
+
+    }
+
+
+    /* =========================================================
+       XPLAN
+       ========================================================= */
+
+    function createXplanChart() {
+
+        const data =
+            getTrendData();
+
+        charts.xplanChart =
+            new Chart(
+                document.getElementById(
+                    "xplanChart"
+                ),
+                {
+                    type: "bar",
+
+                    data: {
+
+                        labels: data.labels,
+
+                        datasets: [
+                            {
+                                label: "Xplan Hours",
+                                data: data.xplan,
+                                backgroundColor:
+                                    COLORS.yellow,
+                                borderRadius: 5
+                            }
+                        ]
+
+                    },
+
+                    options: chartOptions(
+                        function(
+                            event,
+                            elements
+                        ) {
+
+                            if (!elements.length)
+                                return;
+
+                            handleTrendClick(
+                                data.keys[
+                                elements[0].index
+                                ],
+                                "xplan_hours",
+                                "Xplan Hours"
+                            );
+
+                        }
+                    )
+
+                }
+            );
+
+    }
+
+
+    /* =========================================================
+       XPLAN ENGAGEMENT
+       ========================================================= */
+
+    function createXplanEngagementChart() {
+
+        const data =
+            getTrendData();
+
+        charts.xplanEngagementChart =
+            new Chart(
+                document.getElementById(
+                    "xplanEngagementChart"
+                ),
+                {
+                    type: "line",
+
+                    data: {
+
+                        labels: data.labels,
+
+                        datasets: [
+
+                            {
+                                label: "Sessions",
+                                data: data.sessions,
+                                backgroundColor:
+                                    COLORS.blue,
+                                borderRadius: 5
+                            },
+
+                            {
+                                label: "Hours",
+                                data: data.xplan,
+                                backgroundColor:
+                                    COLORS.yellow,
+                                borderRadius: 5
+                            }
+
+                        ]
+
+                    },
+
+                    options: chartOptions(
+                        function(
+                            event,
+                            elements
+                        ) {
+
+                            if (!elements.length)
+                                return;
+
+                            const metric =
+                                elements[0].datasetIndex === 0
+                                    ? "xplan_sessions"
+                                    : "xplan_hours";
+
+                            handleTrendClick(
+                                data.keys[
+                                elements[0].index
+                                ],
+                                metric,
+                                metricLabel(metric)
+                            );
+
+                        }
+                    )
+
+                }
+            );
+
+    }
+
+
+    /* =========================================================
+       ANOMALY
+       ========================================================= */
+
+    function createAnomalyChart() {
+
+        const data =
+            getTrendData();
+
+        charts.anomalyChart =
+            new Chart(
+                document.getElementById(
+                    "anomalyChart"
+                ),
+                {
+                    type: "bar",
+
+                    data: {
+
+                        labels: data.labels,
+
+                        datasets: [
+                            {
+                                label: "Risk Flags",
+                                data: data.flags,
+                                backgroundColor:
+                                    COLORS.red,
+                                borderRadius: 5
+                            }
+                        ]
+
+                    },
+
+                    options: chartOptions(
+                        function(
+                            event,
+                            elements
+                        ) {
+
+                            if (!elements.length)
+                                return;
+
+                            handleTrendClick(
+                                data.keys[
+                                elements[0].index
+                                ],
+                                "flag_count",
+                                "Risk Flags"
+                            );
+
+                        }
+                    )
+
+                }
+            );
+
+    }
+
+
+    /* =========================================================
+       LOCATION
+       ========================================================= */
+
+    function createLocationChart() {
+
+        const groups =
+            groupUsersBy(
+                filteredUsers,
+                "location_verdict"
+            );
+
+        const labels =
+            Object.keys(groups);
+
+        const values =
+            labels.map(
+                x => groups[x].length
+            );
+
+        charts.locationChart =
+            new Chart(
+                document.getElementById(
+                    "locationChart"
+                ),
+                {
+                    type: "doughnut",
+
+                    data: {
+
+                        labels,
+
+                        datasets: [
+                            {
+                                data: values,
+                                backgroundColor: [
+                                    COLORS.blue,
+                                    COLORS.yellow,
+                                    COLORS.red
+                                ]
+                            }
+                        ]
+
+                    },
+
+                    options: chartOptions(
+                        function(
+                            event,
+                            elements
+                        ) {
+
+                            if (!elements.length)
+                                return;
+
+                            const label =
+                                labels[
+                                elements[0].index
+                                ];
+
+                            openContributionForCategory(
+                                "Location: " + label,
+                                filteredRecords.filter(
+                                    r =>
+                                        String(
+                                            r.location_verdict
+                                        ) === String(label)
+                                ),
+                                "Users"
+                            );
+
+                        }
+                    )
+
+                }
+            );
+
+    }
+
+
+    /* =========================================================
+       BRANCH
+       ========================================================= */
+
+    function createBranchChart() {
+
+        const groups =
+            groupUsersBy(
+                filteredUsers,
+                "office_branch"
+            );
+
+        const labels =
+            Object.keys(groups);
+
+        const values =
+            labels.map(
+                x =>
+                    sum(
+                        groups[x],
+                        "work_hours"
+                    )
+            );
+
+        charts.branchChart =
+            new Chart(
+                document.getElementById(
+                    "branchChart"
+                ),
+                {
+                    type: "bar",
+
+                    data: {
+
+                        labels,
+
+                        datasets: [
+                            {
+                                label: "Work Hours",
+                                data: values,
+                                backgroundColor:
+                                    COLORS.blue,
+                                borderRadius: 5
+                            }
+                        ]
+
+                    },
+
+                    options: chartOptions(
+                        function(
+                            event,
+                            elements
+                        ) {
+
+                            if (!elements.length)
+                                return;
+
+                            const label =
+                                labels[
+                                elements[0].index
+                                ];
+
+                            openContributionForCategory(
+                                "Branch: " + label,
+                                filteredRecords.filter(
+                                    r =>
+                                        String(
+                                            r.office_branch
+                                        ) === String(label)
+                                ),
+                                "Work Hours"
+                            );
+
+                        }
+                    )
+
+                }
+            );
+
+    }
+
+
+    /* =========================================================
+       GROUP
+       ========================================================= */
+
+    function createGroupChart() {
+
+        const groups =
+            groupUsersBy(
+                filteredUsers,
+                "user_group"
+            );
+
+        const labels =
+            Object.keys(groups);
+
+        const values =
+            labels.map(
+                x =>
+                    sum(
+                        groups[x],
+                        "work_hours"
+                    )
+            );
+
+        charts.groupChart =
+            new Chart(
+                document.getElementById(
+                    "groupChart"
+                ),
+                {
+                    type: "bar",
+
+                    data: {
+
+                        labels,
+
+                        datasets: [
+                            {
+                                label: "Work Hours",
+                                data: values,
+                                backgroundColor:
+                                    COLORS.blue,
+                                borderRadius: 5
+                            }
+                        ]
+
+                    },
+
+                    options: chartOptions(
+                        function(
+                            event,
+                            elements
+                        ) {
+
+                            if (!elements.length)
+                                return;
+
+                            const label =
+                                labels[
+                                elements[0].index
+                                ];
+
+                            openContributionForCategory(
+                                "User Group: " + label,
+                                filteredRecords.filter(
+                                    r =>
+                                        String(
+                                            r.user_group
+                                        ) === String(label)
+                                ),
+                                "Work Hours"
+                            );
+
+                        }
+                    )
+
+                }
+            );
+
+    }
+
+
+    /* =========================================================
+       JOB TITLE
+       ========================================================= */
+
+    function createJobTitleChart() {
+
+        const groups =
+            groupUsersBy(
+                filteredUsers,
+                "job_title"
+            );
+
+        const labels =
+            Object.keys(groups)
+                .filter(x => x)
+                .slice(0, 20);
+
+        const values =
+            labels.map(
+                x => groups[x].length
+            );
+
+        charts.jobTitleChart =
+            new Chart(
+                document.getElementById(
+                    "jobTitleChart"
+                ),
+                {
+                    type: "bar",
+
+                    data: {
+
+                        labels,
+
+                        datasets: [
+                            {
+                                label: "Users",
+                                data: values,
+                                backgroundColor:
+                                    COLORS.yellow,
+                                borderRadius: 5
+                            }
+                        ]
+
+                    },
+
+                    options: chartOptions(
+                        function(
+                            event,
+                            elements
+                        ) {
+
+                            if (!elements.length)
+                                return;
+
+                            const label =
+                                labels[
+                                elements[0].index
+                                ];
+
+                            openContributionForCategory(
+                                "Job Title: " + label,
+                                filteredRecords.filter(
+                                    r =>
+                                        String(
+                                            r.job_title
+                                        ) === String(label)
+                                ),
+                                "Users"
+                            );
+
+                        }
+                    )
+
+                }
+            );
+
+    }
+
+
+    /* =========================================================
+       USER LEVEL CHARTS
+       ========================================================= */
+
+    function createWorkDistributionChart() {
+
+        const users =
+            [...filteredUsers]
+                .sort(
+                    (a, b) =>
+                        b.work_hours -
+                        a.work_hours
+                )
+                .slice(0, 20);
+
+        charts.workDistributionChart =
+            new Chart(
+                document.getElementById(
+                    "workDistributionChart"
+                ),
+                {
+                    type: "bar",
+
+                    data: {
+
+                        labels:
+                            users.map(
+                                x => x.user_name
+                            ),
+
+                        datasets: [
+                            {
+                                label: "Work Hours",
+                                data:
+                                    users.map(
+                                        x =>
+                                            x.work_hours
+                                    ),
+                                backgroundColor:
+                                    COLORS.blue,
+                                borderRadius: 5
+                            }
+                        ]
+
+                    },
+
+                    options: chartOptions(
+                        function(
+                            event,
+                            elements
+                        ) {
+
+                            if (!elements.length)
+                                return;
+
+                            const user =
+                                users[
+                                elements[0].index
+                                ];
+
+                            openContributionForUser(
+                                user.user_name,
+                                "work_hours",
+                                "Work Hours"
+                            );
+
+                        }
+                    )
+
+                }
+            );
+
+    }
+
+
+    function createAfterHoursChart() {
+
+        const users =
+            [...filteredUsers]
+                .sort(
+                    (a, b) =>
+                        b.xplan_after_hours_sessions -
+                        a.xplan_after_hours_sessions
+                )
+                .slice(0, 20);
+
+        charts.afterHoursChart =
+            new Chart(
+                document.getElementById(
+                    "afterHoursChart"
+                ),
+                {
+                    type: "bar",
+
+                    data: {
+
+                        labels:
+                            users.map(
+                                x => x.user_name
+                            ),
+
+                        datasets: [
+                            {
+                                label: "After Hours",
+                                data:
+                                    users.map(
+                                        x =>
+                                            x.xplan_after_hours_sessions
+                                    ),
+                                backgroundColor:
+                                    COLORS.red,
+                                borderRadius: 5
+                            }
+                        ]
+
+                    },
+
+                    options: chartOptions(
+                        function(
+                            event,
+                            elements
+                        ) {
+
+                            if (!elements.length)
+                                return;
+
+                            const user =
+                                users[
+                                elements[0].index
+                                ];
+
+                            openContributionForUser(
+                                user.user_name,
+                                "xplan_after_hours_sessions",
+                                "After-Hours Sessions"
+                            );
+
+                        }
+                    )
+
+                }
+            );
+
+    }
+
+
+    function createOvernightChart() {
+
+        const users =
+            [...filteredUsers]
+                .sort(
+                    (a, b) =>
+                        b.xplan_overnight_sessions -
+                        a.xplan_overnight_sessions
+                )
+                .slice(0, 20);
+
+        charts.overnightChart =
+            new Chart(
+                document.getElementById(
+                    "overnightChart"
+                ),
+                {
+                    type: "bar",
+
+                    data: {
+
+                        labels:
+                            users.map(
+                                x => x.user_name
+                            ),
+
+                        datasets: [
+                            {
+                                label: "Overnight",
+                                data:
+                                    users.map(
+                                        x =>
+                                            x.xplan_overnight_sessions
+                                    ),
+                                backgroundColor:
+                                    COLORS.red,
+                                borderRadius: 5
+                            }
+                        ]
+
+                    },
+
+                    options: chartOptions(
+                        function(
+                            event,
+                            elements
+                        ) {
+
+                            if (!elements.length)
+                                return;
+
+                            const user =
+                                users[
+                                elements[0].index
+                                ];
+
+                            openContributionForUser(
+                                user.user_name,
+                                "xplan_overnight_sessions",
+                                "Overnight Sessions"
+                            );
+
+                        }
+                    )
+
+                }
+            );
+
+    }
+
+
+    function createIpChart() {
+
+        const users =
+            [...filteredUsers]
+                .sort(
+                    (a, b) =>
+                        b.ip_changes -
+                        a.ip_changes
+                )
+                .slice(0, 20);
+
+        charts.ipChart =
+            new Chart(
+                document.getElementById(
+                    "ipChart"
+                ),
+                {
+                    type: "bar",
+
+                    data: {
+
+                        labels:
+                            users.map(
+                                x => x.user_name
+                            ),
+
+                        datasets: [
+                            {
+                                label: "IP Changes",
+                                data:
+                                    users.map(
+                                        x =>
+                                            x.ip_changes
+                                    ),
+                                backgroundColor:
+                                    COLORS.yellow,
+                                borderRadius: 5
+                            }
+                        ]
+
+                    },
+
+                    options: chartOptions(
+                        function(
+                            event,
+                            elements
+                        ) {
+
+                            if (!elements.length)
+                                return;
+
+                            const user =
+                                users[
+                                elements[0].index
+                                ];
+
+                            openContributionForUser(
+                                user.user_name,
+                                "ip_changes",
+                                "IP Changes"
+                            );
+
+                        }
+                    )
+
+                }
+            );
+
+    }
+
+
+    function createTimeDistributionChart() {
+
+        const users =
+            [...filteredUsers]
+                .sort(
+                    (a, b) =>
+                        b.active_hours -
+                        a.active_hours
+                )
+                .slice(0, 20);
+
+        charts.timeDistributionChart =
+            new Chart(
+                document.getElementById(
+                    "timeDistributionChart"
+                ),
+                {
+                    type: "bar",
+
+                    data: {
+
+                        labels:
+                            users.map(
+                                x => x.user_name
+                            ),
+
+                        datasets: [
+
+                            {
+                                label: "Active",
+                                data:
+                                    users.map(
+                                        x =>
+                                            x.active_hours
+                                    ),
+                                backgroundColor:
+                                    COLORS.blue,
+                                borderRadius: 5
+                            },
+
+                            {
+                                label: "Downtime",
+                                data:
+                                    users.map(
+                                        x =>
+                                            x.downtime_hours
+                                    ),
+                                backgroundColor:
+                                    COLORS.red,
+                                borderRadius: 5
+                            }
+
+                        ]
+
+                    },
+
+                    options: chartOptions(
+                        function(
+                            event,
+                            elements
+                        ) {
+
+                            if (!elements.length)
+                                return;
+
+                            const e =
+                                elements[0];
+
+                            const user =
+                                users[e.index];
+
+                            const metric =
+                                e.datasetIndex === 0
+                                    ? "active_hours"
+                                    : "downtime_hours";
+
+                            openContributionForUser(
+                                user.user_name,
+                                metric,
+                                metricLabel(metric)
+                            );
+
+                        }
+                    )
+
+                }
+            );
+
+    }
+
+
+    function createActivityMatrixChart() {
+
+        const users =
+            [...filteredUsers]
+                .sort(
+                    (a, b) =>
+                        b.active_hours -
+                        a.active_hours
+                )
+                .slice(0, 20);
+
+        charts.activityMatrixChart =
+            new Chart(
+                document.getElementById(
+                    "activityMatrixChart"
+                ),
+                {
+                    type: "bar",
+
+                    data: {
+
+                        labels:
+                            users.map(
+                                x => x.user_name
+                            ),
+
+                        datasets: [
+
+                            {
+                                label: "Work",
+                                data:
+                                    users.map(
+                                        x =>
+                                            x.work_hours
+                                    ),
+                                backgroundColor:
+                                    COLORS.blue
+                            },
+
+                            {
+                                label: "Active",
+                                data:
+                                    users.map(
+                                        x =>
+                                            x.active_hours
+                                    ),
+                                backgroundColor:
+                                    COLORS.yellow
+                            },
+
+                            {
+                                label: "Downtime",
+                                data:
+                                    users.map(
+                                        x =>
+                                            x.downtime_hours
+                                    ),
+                                backgroundColor:
+                                    COLORS.red
+                            }
+
+                        ]
+
+                    },
+
+                    options: {
+                        ...chartOptions(
+                            function(
+                                event,
+                                elements
+                            ) {
+
+                                if (!elements.length)
+                                    return;
+
+                                const e =
+                                    elements[0];
+
+                                const user =
+                                    users[e.index];
+
+                                const metric =
+                                    e.datasetIndex === 0
+                                        ? "work_hours"
+                                        : e.datasetIndex === 1
+                                            ? "active_hours"
+                                            : "downtime_hours";
+
+                                openContributionForUser(
+                                    user.user_name,
+                                    metric,
+                                    metricLabel(metric)
+                                );
+
+                            }
+                        ),
+
+                        scales: {
+
+                            x: {
+                                stacked: true
+                            },
+
+                            y: {
+                                stacked: true,
+                                beginAtZero: true
+                            }
+
+                        }
+
+                    }
+
+                }
+            );
+
+    }
+
+
+    /* =========================================================
+       TREND DATA
+       ========================================================= */
+
+    function getTrendData() {
+
+        /*
+         * DAILY
+         *
+         * Show each user.
+         */
+
+        if (reportPeriod === "daily") {
+
+            const users =
+                [...filteredUsers]
+                    .sort(
+                        (a, b) =>
+                            b.work_hours -
+                            a.work_hours
+                    )
+                    .slice(0, 30);
+
+            return {
+
+                keys:
+                    users.map(
+                        x => x.user_name
+                    ),
+
+                labels:
+                    users.map(
+                        x => x.user_name
+                    ),
+
+                work:
+                    users.map(
+                        x => x.work_hours
+                    ),
+
+                active:
+                    users.map(
+                        x => x.active_hours
+                    ),
+
+                downtime:
+                    users.map(
+                        x => x.downtime_hours
+                    ),
+
+                utilisation:
+                    users.map(
+                        x => x.utilisation
+                    ),
+
+                xplan:
+                    users.map(
+                        x => x.xplan_hours
+                    ),
+
+                sessions:
+                    users.map(
+                        x => x.xplan_sessions
+                    ),
+
+                flags:
+                    users.map(
+                        x => x.flag_count
+                    )
+
+            };
+
+        }
+
+
+        /*
+         * WEEKLY
+         *
+         * Monday -> Sunday.
+         */
+
+        if (reportPeriod === "weekly") {
+
+            const days = [];
+
+            const selected =
+                parseDateOnly(reportDate);
+
+            if (!selected) {
+                return emptyTrend();
+            }
+
+            const day =
+                selected.getDay();
+
+            const mondayOffset =
+                day === 0
+                    ? -6
+                    : 1 - day;
+
+            const monday =
+                new Date(selected);
+
+            monday.setDate(
+                monday.getDate() +
+                mondayOffset
+            );
+
+            for (
+                let i = 0;
+                i < 7;
+                i++
+            ) {
+
+                const d =
+                    new Date(monday);
+
+                d.setDate(
+                    monday.getDate() + i
+                );
+
+                const key =
+                    formatDateInput(d);
+
+                const records =
+                    filteredRecords.filter(
+                        r =>
+                            dateKey(
+                                r.report_date
+                            ) === key
+                    );
+
+                const users =
+                    aggregateUsers(records);
+
+                days.push({
+
+                    key,
+
+                    label:
+                        d.toLocaleDateString(
+                            "en-ZA",
+                            {
+                                weekday: "short",
+                                day: "2-digit"
+                            }
+                        ),
+
+                    work:
+                        sum(users, "work_hours"),
+
+                    active:
+                        sum(users, "active_hours"),
+
+                    downtime:
+                        sum(users, "downtime_hours"),
+
+                    xplan:
+                        sum(users, "xplan_hours"),
+
+                    sessions:
+                        sum(users, "xplan_sessions"),
+
+                    flags:
+                        sum(users, "flag_count"),
+
+                    utilisation:
+                        sum(users, "work_hours") > 0
+                            ? (
+                                sum(
+                                    users,
+                                    "active_hours"
+                                ) /
+                                sum(
+                                    users,
+                                    "work_hours"
+                                )
+                            ) * 100
+                            : 0
+
+                });
+
+            }
+
+            return {
+
+                keys:
+                    days.map(x => x.key),
+
+                labels:
+                    days.map(x => x.label),
+
+                work:
+                    days.map(x => x.work),
+
+                active:
+                    days.map(x => x.active),
+
+                downtime:
+                    days.map(x => x.downtime),
+
+                utilisation:
+                    days.map(x => x.utilisation),
+
+                xplan:
+                    days.map(x => x.xplan),
+
+                sessions:
+                    days.map(x => x.sessions),
+
+                flags:
+                    days.map(x => x.flags)
+
+            };
+
+        }
+
+
+        /*
+         * MONTHLY
+         *
+         * Week 1 -> Week 5.
+         */
+
+        const selected =
+            parseDateOnly(reportDate);
+
+        if (!selected) {
+            return emptyTrend();
+        }
+
+        const year =
+            selected.getFullYear();
+
+        const month =
+            selected.getMonth();
+
+        const weeks = [];
+
+        for (
+            let week = 1;
+            week <= 5;
+            week++
+        ) {
+
+            const records =
+                filteredRecords.filter(
+                    r => {
+
+                        const d =
+                            parseDateOnly(
+                                dateKey(
+                                    r.report_date
+                                )
+                            );
+
+                        if (!d)
+                            return false;
+
+                        return (
+                            d.getFullYear() === year &&
+                            d.getMonth() === month &&
+                            Math.floor(
+                                (d.getDate() - 1) / 7
+                            ) + 1 === week
+                        );
+
+                    }
+                );
+
+            const users =
+                aggregateUsers(records);
+
+            weeks.push({
+
+                key:
+                    "Week " + week,
+
+                label:
+                    "Week " + week,
+
+                work:
+                    sum(users, "work_hours"),
+
+                active:
+                    sum(users, "active_hours"),
+
+                downtime:
+                    sum(users, "downtime_hours"),
+
+                xplan:
+                    sum(users, "xplan_hours"),
+
+                sessions:
+                    sum(users, "xplan_sessions"),
+
+                flags:
+                    sum(users, "flag_count"),
+
+                utilisation:
+                    sum(users, "work_hours") > 0
+                        ? (
+                            sum(
+                                users,
+                                "active_hours"
+                            ) /
+                            sum(
+                                users,
+                                "work_hours"
+                            )
+                        ) * 100
+                        : 0
+
+            });
+
+        }
+
+        return {
+
+            keys:
+                weeks.map(x => x.key),
+
+            labels:
+                weeks.map(x => x.label),
+
+            work:
+                weeks.map(x => x.work),
+
+            active:
+                weeks.map(x => x.active),
+
+            downtime:
+                weeks.map(x => x.downtime),
+
+            utilisation:
+                weeks.map(x => x.utilisation),
+
+            xplan:
+                weeks.map(x => x.xplan),
+
+            sessions:
+                weeks.map(x => x.sessions),
+
+            flags:
+                weeks.map(x => x.flags)
+
+        };
+
+    }
+
+
+    function emptyTrend() {
+
+        return {
+
+            keys: [],
+            labels: [],
+            work: [],
+            active: [],
+            downtime: [],
+            utilisation: [],
+            xplan: [],
+            sessions: [],
+            flags: []
+
+        };
+
+    }
+
+
+    /* =========================================================
+       TREND CLICK
+       ========================================================= */
+
+    function handleTrendClick(
+        key,
+        metric,
+        label
+    ) {
+
+        /*
+         * DAILY:
+         * key is actually username.
+         */
+
+        if (reportPeriod === "daily") {
+
+            openContributionForUser(
+                key,
+                metric,
+                label
+            );
+
+            return;
+        }
+
+
+        /*
+         * WEEKLY:
+         * key = YYYY-MM-DD.
+         */
+
+        if (reportPeriod === "weekly") {
+
+            const records =
+                filteredRecords.filter(
+                    r =>
+                        dateKey(
+                            r.report_date
+                        ) === key
+                );
+
+            const date =
+                parseDateOnly(key);
+
+            const title =
+                `${label} — ${date ? date.toLocaleDateString("en-ZA", {
+                    weekday: "long",
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric"
+                }) : key}`;
+
+            openContributionModal(
+                title,
+                metric,
+                records,
+                metricLabel(metric)
+            );
+
+            return;
+        }
+
+
+        /*
+         * MONTHLY:
+         * key = Week 1 etc.
+         */
+
+        if (reportPeriod === "monthly") {
+
+            const weekNumber =
+                parseInt(
+                    String(key)
+                        .replace("Week ", "")
+                );
+
+            const selected =
+                parseDateOnly(reportDate);
+
+            const records =
+                filteredRecords.filter(
+                    r => {
+
+                        const d =
+                            parseDateOnly(
+                                dateKey(
+                                    r.report_date
+                                )
+                            );
+
+                        if (!d || !selected)
+                            return false;
+
+                        return (
+                            d.getFullYear() ===
+                            selected.getFullYear() &&
+
+                            d.getMonth() ===
+                            selected.getMonth() &&
+
+                            Math.floor(
+                                (d.getDate() - 1) / 7
+                            ) + 1 === weekNumber
+                        );
+
+                    }
+                );
+
+            openContributionModal(
+                "Week " + weekNumber,
+                metric,
+                records,
+                metricLabel(metric)
+            );
+
+        }
+
+    }
+
+
+    /* =========================================================
+       CONTRIBUTION MODAL
+       ========================================================= */
+
+    function openContributionModal(
+        title,
+        metric,
+        records,
+        metricText
+    ) {
+
+        /*
+         * THIS IS THE IMPORTANT FIX.
+         *
+         * Always aggregate the raw records here.
+         * Never depend on an already rendered chart.
+         */
+
+        const users =
+            aggregateContributionUsers(
+                records,
+                metric
+            );
+
+
+        const total =
+            users.reduce(
+                (sum, x) =>
+                    sum + x.value,
+                0
+            );
+
+
+        const average =
+            users.length > 0
+                ? total / users.length
+                : 0;
+
+
+        document.getElementById(
+            "contributionTitle"
+        ).textContent =
+            title;
+
+
+        document.getElementById(
+            "contributionSubtitle"
+        ).textContent =
+            `Users contributing to ${metricText}`;
+
+
+        document.getElementById(
+            "contributionTotal"
+        ).textContent =
+            formatMetricValue(
+                total,
+                metric
+            );
+
+
+        document.getElementById(
+            "contributionUsers"
+        ).textContent =
+            users.length;
+
+
+        document.getElementById(
+            "contributionAverage"
+        ).textContent =
+            formatMetricValue(
+                average,
+                metric
+            );
+
+
+        document.getElementById(
+            "contributionMetric"
+        ).textContent =
+            metricText;
+
+
+        const tbody =
+            document.getElementById(
+                "contributionTableBody"
+            );
+
+
+        /*
+         * Clear old rows BEFORE inserting new ones.
+         */
+
+        tbody.innerHTML = "";
+
+
+        if (!users.length) {
+
+            const tr =
+                document.createElement("tr");
+
+            const td =
+                document.createElement("td");
+
+            td.colSpan = 6;
+
+            td.className =
+                "empty-contribution";
+
+            td.textContent =
+                "No users contributed to this result.";
+
+            tr.appendChild(td);
+
+            tbody.appendChild(tr);
+
+        } else {
+
+            users.forEach(user => {
+
+                const tr =
+                    document.createElement("tr");
+
+                tr.dataset.user =
+                    user.user_name;
+
+
+                tr.innerHTML = `
+
+                        <td>
+                            <span class="user-link contributor-user">
+                                ${escapeHtml(user.user_name)}
+                            </span>
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                    formatMetricValue(
+                        user.value,
+                        metric
+                    )
+                )}
+                        </td>
+
+                        <td>
+                            <span class="badge badge-blue">
+                                ${user.percentage.toFixed(1)}%
+                            </span>
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                    user.user_group || "—"
+                )}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                    user.office_branch || "—"
+                )}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                    user.job_title || "—"
+                )}
+                        </td>
+
+                    `;
+
+
+                tr.addEventListener(
+                    "click",
+                    function() {
+
+                        openUserModal(
+                            user.user_name
+                        );
+
+                    }
+                );
+
+
+                tbody.appendChild(tr);
+
+            });
+
+        }
+
+
+        /*
+         * Populate everything FIRST.
+         * Then show modal.
+         */
+
+        const modal =
+            document.getElementById(
+                "contributionModal"
+            );
+
+        modal.classList.add("show");
+
+        document.body.style.overflow =
+            "hidden";
+
+    }
+
+
+    function openContributionForUser(
+        userName,
+        metric,
+        metricText
+    ) {
+
+        const records =
+            filteredRecords.filter(
+                r =>
+                    String(
+                        r.user_name
+                    ) === String(userName)
+            );
+
+
+        openContributionModal(
+            userName,
+            metric,
+            records,
+            metricText
+        );
+
+    }
+
+
+    function openContributionForCategory(
+        title,
+        records,
+        metricText
+    ) {
+
+        /*
+         * For categories such as Branch, Group
+         * and Location, show work contribution
+         * when "Users" is not a numeric metric.
+         */
+
+        const metric =
+            metricText === "Users"
+                ? "user_count"
+                : "work_hours";
+
+
+        const users =
+            records.map(r => ({
+                ...r,
+                user_count: 1
+            }));
+
+
+        if (metric === "user_count") {
+
+            const unique =
+                aggregateUsers(
+                    records
+                );
+
+            openContributionModal(
+                title,
+                "user_count",
+                unique.map(u => ({
+                    ...u,
+                    user_count: 1
+                })),
+                "Users"
+            );
+
+        } else {
+
+            openContributionModal(
+                title,
+                "work_hours",
+                users,
+                "Work Hours"
+            );
+
+        }
+
+    }
+
+
+    function aggregateContributionUsers(
+        records,
+        metric
+    ) {
+
+        const map =
+            new Map();
+
+
+        records.forEach(r => {
+
+            const name =
+                String(
+                    r.user_name ||
+                    "Unknown"
+                );
+
+
+            if (!map.has(name)) {
+
+                map.set(name, {
+
+                    user_name: name,
+
+                    user_group:
+                        r.user_group || "",
+
+                    office_branch:
+                        r.office_branch || "",
+
+                    job_title:
+                        r.job_title || "",
+
+                    value: 0
+
+                });
+
+            }
+
+
+            const item =
+                map.get(name);
+
+
+            let value = 0;
+
+
+            if (metric === "utilisation") {
+
+                /*
+                 * For utilisation across
+                 * multiple records, use
+                 * active / work later.
+                 */
+
+                value +=
+                    num(r.active_hours);
+
+            } else if (
+                metric === "user_count"
+            ) {
+
+                value = 1;
+
+            } else {
+
+                value =
+                    num(
+                        r[metric]
+                    );
+
+            }
+
+
+            item.value += value;
+
+        });
+
+
+        let users =
+            Array.from(
+                map.values()
+            );
+
+
+        /*
+         * For utilisation,
+         * calculate weighted utilisation.
+         */
+
+        if (
+            metric ===
+            "utilisation"
+        ) {
+
+            const grouped =
+                new Map();
+
+
+            records.forEach(r => {
+
+                const name =
+                    String(
+                        r.user_name ||
+                        "Unknown"
+                    );
+
+
+                if (!grouped.has(name)) {
+
+                    grouped.set(
+                        name,
+                        {
+                            active: 0,
+                            work: 0
+                        }
+                    );
+
+                }
+
+
+                const g =
+                    grouped.get(name);
+
+
+                g.active +=
+                    num(r.active_hours);
+
+                g.work +=
+                    num(r.work_hours);
+
+            });
+
+
+            users =
+                users.map(u => {
+
+                    const g =
+                        grouped.get(
+                            u.user_name
+                        );
+
+
+                    return {
+
+                        ...u,
+
+                        value:
+                            g && g.work > 0
+                                ? (
+                                    g.active /
+                                    g.work
+                                ) * 100
+                                : 0
+
+                    };
+
+                });
+
+        }
+
+
+        const total =
+            users.reduce(
+                (sum, x) =>
+                    sum + x.value,
+                0
+            );
+
+
+        users =
+            users.map(u => ({
+
+                ...u,
+
+                percentage:
+                    total > 0
+                        ? (
+                            u.value /
+                            total
+                        ) * 100
+                        : 0
+
+            }));
+
+
+        users.sort(
+            (a, b) =>
+                b.value -
+                a.value
+        );
+
+
+        return users;
+
+    }
+
+
+    function closeContributionModal() {
+
+        document
+            .getElementById(
+                "contributionModal"
+            )
+            .classList.remove("show");
+
+        if (
+            !document
+                .getElementById(
+                    "userModal"
+                )
+                .classList.contains("show")
+        ) {
+
+            document.body.style.overflow =
+                "";
+
+        }
+
+    }
+
+
+    /* =========================================================
+       USER MODAL
+       ========================================================= */
+
+    function openUserModal(
+        userName
+    ) {
+
+        const user =
+            filteredUsers.find(
+                x =>
+                    String(
+                        x.user_name
+                    ) === String(userName)
+            );
+
+
+        if (!user) {
+
+            console.warn(
+                "User not found:",
+                userName
+            );
+
+            return;
+
+        }
+
+
+        setText(
+            "userModalName",
+            user.user_name
+        );
+
+        setText(
+            "userModalSubtitle",
+            `${user.user_group || "—"} • ${user.job_title || "—"}`
+        );
+
+
+        setText(
+            "detailGroup",
+            user.user_group
+        );
+
+        setText(
+            "detailJobTitle",
+            user.job_title
+        );
+
+        setText(
+            "detailBranch",
+            user.office_branch
+        );
+
+        setText(
+            "detailCity",
+            user.city
+        );
+
+        setText(
+            "detailWork",
+            formatNumber(
+                user.work_hours
+            )
+        );
+
+        setText(
+            "detailActive",
+            formatNumber(
+                user.active_hours
+            )
+        );
+
+        setText(
+            "detailDowntime",
+            formatNumber(
+                user.downtime_hours
+            )
+        );
+
+        setText(
+            "detailUtilisation",
+            formatNumber(
+                user.utilisation
+            ) + "%"
+        );
+
+        setText(
+            "detailXplan",
+            formatNumber(
+                user.xplan_hours
+            )
+        );
+
+        setText(
+            "detailXplanSessions",
+            formatNumber(
+                user.xplan_sessions,
+                0
+            )
+        );
+
+        setText(
+            "detailAfterHours",
+            formatNumber(
+                user.xplan_after_hours_sessions,
+                0
+            )
+        );
+
+        setText(
+            "detailOvernight",
+            formatNumber(
+                user.xplan_overnight_sessions,
+                0
+            )
+        );
+
+        setText(
+            "detailIpChanges",
+            formatNumber(
+                user.ip_changes,
+                0
+            )
+        );
+
+        setText(
+            "detailFlags",
+            formatNumber(
+                user.flag_count,
+                0
+            )
+        );
+
+        setText(
+            "detailLocation",
+            user.location_verdict
+        );
+
+        setText(
+            "detailConnection",
+            user.connection_type
+        );
+
+        setText(
+            "detailDevice",
+            user.device_name
+        );
+
+        setText(
+            "detailIsp",
+            user.isp
+        );
+
+        setText(
+            "detailFirstIp",
+            user.first_public_ip
+        );
+
+        setText(
+            "detailLastIp",
+            user.last_public_ip
+        );
+
+        /*
+         * These values are not always available
+         * after aggregation, so retrieve the latest
+         * matching raw record.
+         */
+
+        const raw =
+            filteredRecords.find(
+                x =>
+                    String(
+                        x.user_name
+                    ) === String(userName)
+            );
+
+
+        setText(
+            "detailClockIn",
+            raw?.clock_in || "—"
+        );
+
+        setText(
+            "detailClockOut",
+            raw?.clock_out || "—"
+        );
+
+        setText(
+            "detailAnomaly",
+            raw?.anomaly_flags || "—"
+        );
+
+        setText(
+            "detailResearch",
+            raw?.research_note || "—"
+        );
+
+
+        /*
+         * If contribution modal is open,
+         * close it before showing profile.
+         */
+
+        closeContributionModal();
+
+
+        document
+            .getElementById(
+                "userModal"
+            )
+            .classList.add("show");
+
+        document.body.style.overflow =
+            "hidden";
+
+    }
+
+
+    function closeUserModal() {
+
+        document
+            .getElementById(
+                "userModal"
+            )
+            .classList.remove("show");
+
+        document.body.style.overflow =
+            "";
+
+    }
+
+
+    /* =========================================================
+       WORKFORCE TABLE
+       ========================================================= */
+
+    function renderWorkforceTable() {
+
+        const tbody =
+            document.getElementById(
+                "workforceTableBody"
+            );
+
+        tbody.innerHTML = "";
+
+
+        setText(
+            "recordCount",
+            `${filteredUsers.length} users`
+        );
+
+
+        setText(
+            "tableTitle",
+            `Workforce — ${capitalize(reportPeriod)}`
+        );
+
+
+        if (!filteredUsers.length) {
+
+            const tr =
+                document.createElement("tr");
+
+            const td =
+                document.createElement("td");
+
+            td.colSpan = 13;
+
+            td.className =
+                "empty-contribution";
+
+            td.textContent =
+                "No workforce records found.";
+
+            tr.appendChild(td);
+
+            tbody.appendChild(tr);
+
+            return;
+
+        }
+
+
+        filteredUsers.forEach(
+            user => {
+
+                const tr =
+                    document.createElement("tr");
+
+
+                tr.innerHTML = `
+
+                        <td>
+                            <span
+                                class="user-link workforce-user"
+                                data-user="${escapeHtmlAttribute(user.user_name)}">
+                                ${escapeHtml(user.user_name)}
+                            </span>
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                    user.user_group || "—"
+                )}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                    user.job_title || "—"
+                )}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                    user.office_branch || "—"
+                )}
+                        </td>
+
+                        <td>
+                            ${formatNumber(
+                    user.work_hours
+                )}
+                        </td>
+
+                        <td>
+                            ${formatNumber(
+                    user.active_hours
+                )}
+                        </td>
+
+                        <td>
+                            ${formatNumber(
+                    user.downtime_hours
+                )}
+                        </td>
+
+                        <td>
+                            <span class="badge badge-blue">
+                                ${formatNumber(
+                    user.utilisation
+                )}%
+                            </span>
+                        </td>
+
+                        <td>
+                            ${formatNumber(
+                    user.xplan_hours
+                )}
+                        </td>
+
+                        <td>
+                            ${formatNumber(
+                    user.xplan_sessions,
+                    0
+                )}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                    user.location_verdict || "—"
+                )}
+                        </td>
+
+                        <td>
+                            ${formatNumber(
+                    user.ip_changes,
+                    0
+                )}
+                        </td>
+
+                        <td>
+                            ${user.flag_count > 0
+                        ? `<span class="badge badge-red">
+                                        ${user.flag_count}
+                                       </span>`
+                        : `<span class="badge badge-blue">
+                                        0
+                                       </span>`
+                    }
+                        </td>
+
+                    `;
+
+
+                tr.querySelector(
+                    ".workforce-user"
+                ).addEventListener(
+                    "click",
+                    function() {
+
+                        openUserModal(
+                            user.user_name
+                        );
+
+                    }
+                );
+
+
+                tbody.appendChild(tr);
+
+            }
+        );
+
+    }
+
+
+    /* =========================================================
+       CHART OPTIONS
+       ========================================================= */
+
+    function chartOptions(
+        clickHandler
+    ) {
+
+        return {
+
+            responsive: true,
+
+            maintainAspectRatio: false,
+
+            interaction: {
+                mode: "nearest",
+                intersect: true
+            },
+
+            plugins: {
+
+                legend: {
+                    position: "bottom",
+                    labels: {
+                        boxWidth: 12,
+                        font: {
+                            size: 11
+                        }
+                    }
+                },
+
+                tooltip: {
+
+                    callbacks: {
+
+                        label:
+                            function(context) {
+
+                                return (
+                                    context.dataset
+                                        .label +
+                                    ": " +
+                                    formatNumber(
+                                        context.parsed.y
+                                    )
+                                );
+
+                            }
+
+                    }
+
+                }
+
+            },
+
+            scales: {
+
+                x: {
+                    ticks: {
+                        font: {
+                            size: 10
+                        }
+                    },
+
+                    grid: {
+                        display: false
+                    }
+                },
+
+                y: {
+                    beginAtZero: true,
+
+                    ticks: {
+                        font: {
+                            size: 10
+                        }
+                    }
+                }
+
+            },
+
+            onClick:
+                clickHandler,
+
+            onHover:
+                function(
+                    event,
+                    elements
+                ) {
+
+                    if (
+                        event.native &&
+                        event.native.target
+                    ) {
+
+                        event.native.target.style.cursor =
+                            elements.length
+                                ? "pointer"
+                                : "default";
+
+                    }
+
+                }
+
+        };
+
+    }
+
+
+    /* =========================================================
+       DESTROY CHARTS
+       ========================================================= */
+
+    function destroyCharts() {
+
+        Object.keys(charts)
+            .forEach(key => {
+
+                if (
+                    charts[key] &&
+                    typeof charts[key].destroy ===
+                    "function"
+                ) {
+
+                    charts[key].destroy();
+
+                }
+
+            });
+
+
+        Object.keys(charts)
+            .forEach(
+                key =>
+                    delete charts[key]
+            );
+
+    }
+
+
+    /* =========================================================
+       PERIOD
+       ========================================================= */
+
+    function updatePeriodButtons() {
+
+        document
+            .querySelectorAll(".period-btn")
+            .forEach(btn => {
+
+                btn.classList.toggle(
+                    "active",
+                    btn.dataset.period ===
+                    reportPeriod
+                );
+
+            });
+
+    }
+
+
+    function updatePeriodDescription(
+        payload
+    ) {
+
+        let text = "";
+
+        if (
+            payload &&
+            payload.start_date &&
+            payload.end_date
+        ) {
+
+            text =
+                `${capitalize(reportPeriod)}: ` +
+                `${formatDisplayDate(
+                    payload.start_date
+                )} — ` +
+                `${formatDisplayDate(
+                    payload.end_date
+                )}`;
+
+        } else {
+
+            text =
+                `${capitalize(reportPeriod)} activity`;
+
+        }
+
+
+        setText(
+            "periodDescription",
+            text
+        );
+
+    }
+
+
+    /* =========================================================
+       HELPERS
+       ========================================================= */
+
+    function num(value) {
+
+        const n =
+            Number(value);
+
+        return Number.isFinite(n)
+            ? n
+            : 0;
+
+    }
+
+
+    function sum(
+        array,
+        property
+    ) {
+
+        return array.reduce(
+            (total, item) =>
+                total +
+                num(item[property]),
+            0
+        );
+
+    }
+
+
+    function uniqueValues(
+        array
+    ) {
+
+        return [
+            ...new Set(
+                array
+                    .filter(
+                        x =>
+                            x !== null &&
+                            x !== undefined &&
+                            String(x).trim() !== ""
+                    )
+                    .map(x => String(x))
+            )
+        ].sort(
+            (a, b) =>
+                a.localeCompare(b)
+        );
+
+    }
+
+
+    function groupUsersBy(
+        users,
+        property
+    ) {
+
+        const groups = {};
+
+        users.forEach(user => {
+
+            const key =
+                String(
+                    user[property] ||
+                    "Unknown"
+                );
+
+            if (!groups[key]) {
+                groups[key] = [];
+            }
+
+            groups[key].push(user);
+
+        });
+
+        return groups;
+
+    }
+
+
+    function metricLabel(
+        metric
+    ) {
+
+        const labels = {
+
+            work_hours:
+                "Work Hours",
+
+            active_hours:
+                "Active Hours",
+
+            downtime_hours:
+                "Downtime",
+
+            utilisation:
+                "Utilisation",
+
+            xplan_hours:
+                "Xplan Hours",
+
+            xplan_sessions:
+                "Xplan Sessions",
+
+            flag_count:
+                "Risk Flags",
+
+            ip_changes:
+                "IP Changes",
+
+            xplan_after_hours_sessions:
+                "After-Hours Sessions",
+
+            xplan_overnight_sessions:
+                "Overnight Sessions",
+
+            user_count:
+                "Users"
+
+        };
+
+        return labels[metric] ||
+            metric;
+
+    }
+
+
+    function formatMetricValue(
+        value,
+        metric
+    ) {
+
+        if (
+            metric ===
+            "utilisation"
+        ) {
+
+            return (
+                formatNumber(value) +
+                "%"
+            );
+
+        }
+
+        if (
+            metric ===
+            "xplan_sessions" ||
+            metric ===
+            "flag_count" ||
+            metric ===
+            "ip_changes" ||
+            metric ===
+            "xplan_after_hours_sessions" ||
+            metric ===
+            "xplan_overnight_sessions" ||
+            metric ===
+            "user_count"
+        ) {
+
+            return formatNumber(
+                value,
+                0
+            );
+
+        }
+
+        return formatNumber(
+            value
+        );
+
+    }
+
+
+    function formatNumber(
+        value,
+        decimals = 2
+    ) {
+
+        return num(value)
+            .toLocaleString(
+                "en-ZA",
+                {
+                    minimumFractionDigits:
+                        decimals,
+                    maximumFractionDigits:
+                        decimals
+                }
+            );
+
+    }
+
+
+    function setText(
+        id,
+        value
+    ) {
+
+        const element =
+            document.getElementById(id);
+
+        if (element) {
+            element.textContent =
+                value ?? "—";
+        }
+
+    }
+
+
+    function formatDateInput(
+        date
+    ) {
+
+        const y =
+            date.getFullYear();
+
+        const m =
+            String(
+                date.getMonth() + 1
+            ).padStart(2, "0");
+
+        const d =
+            String(
+                date.getDate()
+            ).padStart(2, "0");
+
+        return `${y}-${m}-${d}`;
+
+    }
+
+
+    function parseDateOnly(
+        value
+    ) {
+
+        if (!value)
+            return null;
+
+        const text =
+            String(value)
+                .substring(0, 10);
+
+        const parts =
+            text.split("-");
+
+        if (parts.length !== 3)
+            return null;
+
+        const date =
+            new Date(
+                Number(parts[0]),
+                Number(parts[1]) - 1,
+                Number(parts[2])
+            );
+
+        return Number.isNaN(
+            date.getTime()
+        )
+            ? null
+            : date;
+
+    }
+
+
+    function dateKey(
+        value
+    ) {
+
+        if (!value)
+            return "";
+
+        const text =
+            String(value);
+
+        /*
+         * Handles:
+         *
+         * 2026-09-30
+         *
+         * 2026-09-30T00:00:00
+         */
+
+        return text.substring(
+            0,
+            10
+        );
+
+    }
+
+
+    function formatDisplayDate(
+        value
+    ) {
+
+        const d =
+            parseDateOnly(value);
+
+        if (!d)
+            return value;
+
+        return d.toLocaleDateString(
+            "en-ZA",
+            {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+            }
+        );
+
+    }
+
+
+    function capitalize(
+        value
+    ) {
+
+        if (!value)
+            return "";
+
+        return value
+            .charAt(0)
+            .toUpperCase() +
+            value.slice(1);
+
+    }
+
+
+    function escapeHtml(
+        value
+    ) {
+
+        return String(
+            value ?? ""
+        )
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+
+    }
+
+
+    function escapeHtmlAttribute(
+        value
+    ) {
+
+        return escapeHtml(value);
+
+    }
+
+
+    /* =========================================================
+       STATUS
+       ========================================================= */
+
+    function showLoading(
+        show
+    ) {
+
+        document
+            .getElementById(
+                "loadingBox"
+            )
+            .classList.toggle(
+                "show",
+                show
+            );
+
+    }
+
+
+    function showError(
+        message
+    ) {
+
+        const box =
+            document.getElementById(
+                "errorBox"
+            );
+
+        box.textContent =
+            message;
+
+        box.classList.add(
+            "show"
+        );
+
+    }
+
+
+    function hideError() {
+
+        document
+            .getElementById(
+                "errorBox"
+            )
+            .classList.remove(
+                "show"
+            );
+
+    }
+
+    function clearDashboard() {
+
+        setText("kpiUsers", "0");
+        setText("kpiWork", "0");
+        setText("kpiActive", "0");
+        setText("kpiDowntime", "0");
+        setText("kpiUtilisation", "0%");
+        setText("kpiXplan", "0");
+        setText("kpiXplanSessions", "0");
+        setText("kpiFlags", "0");
+        setText("kpiAfterHours", "0");
+        setText("kpiOvernight", "0");
+        setText("kpiIpChanges", "0");
+        setText("kpiFlaggedUsers", "0");
+
+        document
+            .getElementById(
+                "workforceTableBody"
+            )
+            .innerHTML = "";
+
+        destroyCharts();
+
+    }
+
+
+    /* =========================================================
+       PDF
+       ========================================================= */
+
+    function exportDashboardPdf() {
+
+        const element =
+            document.querySelector(
+                ".dashboard"
+            );
+
+        const filename =
+            `activity-dashboard-${reportPeriod}-${reportDate}.pdf`;
+
+        html2pdf()
+            .set({
+
+                margin: 0.25,
+
+                filename,
+
+                image: {
+                    type: "jpeg",
+                    quality: 0.95
+                },
+
+                html2canvas: {
+                    scale: 1.5,
+                    useCORS: true
+                },
+
+                jsPDF: {
+                    unit: "in",
+                    format: "a4",
+                    orientation: "landscape"
+                }
+
+            })
+            .from(element)
+            .save();
+
+    }
+
+</script>
